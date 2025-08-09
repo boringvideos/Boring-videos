@@ -1,161 +1,196 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Video Archive</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 700px;
-      margin: 36px auto;
-      padding: 20px;
-      background: #f5f5f5;
-      color: #111;
-      text-align: center;
-    }
-    h1 { margin-bottom: 18px; }
-    .hidden { display: none; }
-    input[type="password"], input[type="text"], textarea {
-      width: 100%;
-      padding: 10px;
-      font-size: 14px;
-      margin-top: 6px;
-      box-sizing: border-box;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    button {
-      padding: 12px;
-      font-size: 15px;
-      background: #222;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-    button:active { transform: translateY(1px); }
-    .video-placeholder {
-      margin-top: 20px;
-      background: #000;
-      color: #fff;
-      padding: 40px;
-    }
-    .btn-row { display: flex; gap: 8px; margin-top: 14px; }
-    button.secondary { background: #666; }
-    textarea#output { height: 140px; resize: vertical; background: #eee; }
-    label { display: block; margin-top: 12px; font-weight: 600; text-align: left; }
-    .hint { margin-top: 8px; color: #444; font-size: 13px; text-align: left; }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Video Archive</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    max-width: 700px;
+    margin: 40px auto;
+    padding: 20px;
+    background: #f5f5f5;
+    color: #111;
+    text-align: center;
+  }
+  h1 {
+    margin-bottom: 18px;
+  }
+  .hidden {
+    display: none;
+  }
+  input[type="password"],
+  input[type="text"],
+  textarea {
+    width: 100%;
+    padding: 10px;
+    font-size: 14px;
+    margin-top: 6px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-family: monospace;
+  }
+  button {
+    padding: 12px;
+    font-size: 15px;
+    background: #222;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 10px;
+    font-family: monospace;
+  }
+  button:active {
+    transform: translateY(1px);
+  }
+  .video-placeholder {
+    margin-top: 20px;
+    background: #000;
+    color: #fff;
+    padding: 80px 0;
+    font-weight: bold;
+    font-size: 1.5em;
+    user-select: none;
+  }
+  .btn-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+  }
+  button.secondary {
+    background: #666;
+  }
+  textarea#output {
+    height: 140px;
+    resize: vertical;
+    background: #eee;
+  }
+  label {
+    display: block;
+    margin-top: 12px;
+    font-weight: 600;
+    text-align: left;
+  }
+  .hint {
+    margin-top: 8px;
+    color: #444;
+    font-size: 13px;
+    text-align: left;
+  }
+</style>
 </head>
 <body>
 
-  <!-- Fake video archive screen -->
-  <div id="lock-screen">
-    <h1>Welcome to the Video Archive</h1>
-    <div class="video-placeholder">[Video not available]</div>
-    <p style="margin-top:20px;">Enter access code to unlock:</p>
-    <input id="pin-input" type="password" placeholder="Enter code..." />
-    <button onclick="checkPin()">Unlock</button>
+<!-- Fake video archive screen -->
+<div id="lock-screen">
+  <h1>Welcome to the Video Archive</h1>
+  <div class="video-placeholder">[Video not available]</div>
+  <p style="margin-top:20px;">Enter access code to unlock:</p>
+  <input id="pin-input" type="password" placeholder="Enter code..." autocomplete="off" />
+  <button onclick="checkPin()">Unlock</button>
+</div>
+
+<!-- Cipher tool (hidden until correct PIN) -->
+<div id="cipher-screen" class="hidden">
+  <h1>Black Vault Cipher</h1>
+
+  <label for="plaintext">Enter message (plaintext for Encrypt OR base64 for Decrypt):</label>
+  <textarea id="plaintext" placeholder="Type message here..."></textarea>
+
+  <label for="key">Enter key:</label>
+  <input id="key" type="text" placeholder="Type your secret key here..." autocomplete="off" />
+
+  <div class="btn-row">
+    <button onclick="encrypt()">Encrypt → Base64</button>
+    <button class="secondary" onclick="decrypt()">Decrypt ← Base64</button>
   </div>
 
-  <!-- Cipher tool (hidden until correct PIN) -->
-  <div id="cipher-screen" class="hidden">
-    <h1>Black Vault Cipher</h1>
+  <label for="output">Output:</label>
+  <textarea id="output" readonly placeholder="Result will appear here..."></textarea>
 
-    <label for="plaintext">Enter message (plaintext for Encrypt OR base64 for Decrypt):</label>
-    <textarea id="plaintext" placeholder="Type message here..."></textarea>
-
-    <label for="key">Enter key:</label>
-    <input id="key" type="text" placeholder="Type your secret key here..." />
-
-    <div class="btn-row">
-      <button onclick="encrypt()">Encrypt → Base64</button>
-      <button class="secondary" onclick="decrypt()">Decrypt ← Base64</button>
-    </div>
-
-    <label for="output">Output:</label>
-    <textarea id="output" readonly placeholder="Result will appear here..."></textarea>
-
-    <div class="hint">
-      Tip: To test, put simple text in the message field and a short key, press Encrypt, then copy the result back into the message field and press Decrypt with the same key.
-    </div>
+  <div class="hint">
+    Tip: To test, put simple text in the message field and a short key, press Encrypt, then copy the result back into the message field and press Decrypt with the same key.
   </div>
+</div>
 
-  <script>
-    const correctPin = "956420";
+<script>
+  const correctPin = "956420";
 
-    function checkPin() {
-      const pin = document.getElementById('pin-input').value.trim();
-      if (pin === correctPin) {
-        document.getElementById('lock-screen').classList.add('hidden');
-        document.getElementById('cipher-screen').classList.remove('hidden');
-      } else {
-        alert("Incorrect code.");
-      }
+  function checkPin() {
+    const pin = document.getElementById('pin-input').value.trim();
+    if (pin === correctPin) {
+      document.getElementById('lock-screen').classList.add('hidden');
+      document.getElementById('cipher-screen').classList.remove('hidden');
+      // Clear PIN input for security
+      document.getElementById('pin-input').value = "";
+    } else {
+      alert("Incorrect code.");
     }
+  }
 
-    // UTF-8 safe helpers (work with non-ASCII characters)
-    function strToUint8Array(s) {
-      const encoder = new TextEncoder();
-      return encoder.encode(s);
+  // UTF-8 safe helpers (work with non-ASCII characters)
+  function strToUint8Array(s) {
+    const encoder = new TextEncoder();
+    return encoder.encode(s);
+  }
+  function uint8ArrayToStr(arr) {
+    const decoder = new TextDecoder();
+    return decoder.decode(arr);
+  }
+  function xorBytes(inputBytes, keyBytes) {
+    const out = new Uint8Array(inputBytes.length);
+    for (let i = 0; i < inputBytes.length; i++) {
+      out[i] = inputBytes[i] ^ keyBytes[i % keyBytes.length];
     }
-    function uint8ArrayToStr(arr) {
-      const decoder = new TextDecoder();
-      return decoder.decode(arr);
-    }
-    function xorBytes(inputBytes, keyBytes) {
-      const out = new Uint8Array(inputBytes.length);
-      for (let i = 0; i < inputBytes.length; i++) {
-        out[i] = inputBytes[i] ^ keyBytes[i % keyBytes.length];
-      }
+    return out;
+  }
+  function base64FromUint8(arr) {
+    let bin = '';
+    for (let i = 0; i < arr.length; i++) bin += String.fromCharCode(arr[i]);
+    return btoa(bin);
+  }
+  function uint8FromBase64(b64) {
+    try {
+      const bin = atob(b64);
+      const out = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
       return out;
+    } catch (e) {
+      return null;
     }
-    function base64FromUint8(arr) {
-      let bin = '';
-      for (let i = 0; i < arr.length; i++) bin += String.fromCharCode(arr[i]);
-      return btoa(bin);
-    }
-    function uint8FromBase64(b64) {
-      try {
-        const bin = atob(b64);
-        const out = new Uint8Array(bin.length);
-        for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
-        return out;
-      } catch (e) {
-        return null;
-      }
-    }
+  }
 
-    function encrypt() {
-      const text = document.getElementById('plaintext').value;
-      const key = document.getElementById('key').value;
-      if (!text) return alert('Please enter a message to encrypt.');
-      if (!key) return alert('Please enter a key.');
+  function encrypt() {
+    const text = document.getElementById('plaintext').value;
+    const key = document.getElementById('key').value;
+    if (!text) return alert('Please enter a message to encrypt.');
+    if (!key) return alert('Please enter a key.');
 
-      const textBytes = strToUint8Array(text);
-      const keyBytes = strToUint8Array(key);
-      const encrypted = xorBytes(textBytes, keyBytes);
-      const b64 = base64FromUint8(encrypted);
-      document.getElementById('output').value = b64;
-    }
+    const textBytes = strToUint8Array(text);
+    const keyBytes = strToUint8Array(key);
+    const encrypted = xorBytes(textBytes, keyBytes);
+    const b64 = base64FromUint8(encrypted);
+    document.getElementById('output').value = b64;
+  }
 
-    function decrypt() {
-      const b64 = document.getElementById('plaintext').value.trim();
-      const key = document.getElementById('key').value;
-      if (!b64) return alert('Please enter Base64 text to decrypt.');
-      if (!key) return alert('Please enter a key.');
+  function decrypt() {
+    const b64 = document.getElementById('plaintext').value.trim();
+    const key = document.getElementById('key').value;
+    if (!b64) return alert('Please enter Base64 text to decrypt.');
+    if (!key) return alert('Please enter a key.');
 
-      const encryptedBytes = uint8FromBase64(b64);
-      if (!encryptedBytes) return alert('Invalid Base64 input.');
+    const encryptedBytes = uint8FromBase64(b64);
+    if (!encryptedBytes) return alert('Invalid Base64 input.');
 
-      const keyBytes = strToUint8Array(key);
-      const decryptedBytes = xorBytes(encryptedBytes, keyBytes);
-      const result = uint8ArrayToStr(decryptedBytes);
-      document.getElementById('output').value = result;
-    }
-  </script>
+    const keyBytes = strToUint8Array(key);
+    const decryptedBytes = xorBytes(encryptedBytes, keyBytes);
+    const result = uint8ArrayToStr(decryptedBytes);
+    document.getElementById('output').value = result;
+  }
+</script>
 
 </body>
 </html>
